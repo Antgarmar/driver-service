@@ -1,4 +1,4 @@
-package com.driver.producer;
+package com.driver.adapter.out.producer;
 
 import com.driver.DriverProducer;
 import com.driver.model.DriverLocationEvent;
@@ -10,12 +10,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DriverProducerImpl implements DriverProducer {
 
-    private static final String TOPIC = "driver-location-topic";
+	private static final String TOPIC = "driver-location-topic";
 
-    private final KafkaTemplate<String, DriverLocationEvent> kafkaTemplate;
+	private final KafkaTemplate<String, DriverLocationEvent> kafkaTemplate;
 
-
-    public void sendDriverLocation(DriverLocationEvent event) {
-        kafkaTemplate.send(TOPIC, event.getDriverId(), event);
-    }
+	public void sendDriverLocation(DriverLocationEvent event) {
+		this.kafkaTemplate.send(TOPIC, event.getDriverId(), event);
+	}
 }
