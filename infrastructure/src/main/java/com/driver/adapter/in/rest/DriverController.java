@@ -2,11 +2,14 @@ package com.driver.adapter.in.rest;
 
 import com.driver.model.Location;
 import com.driver.model.UpdateDriverLocationCommand;
+import com.driver.model.UpdateDriverStatusCommand;
 import com.driver.port.in.UpdateDriverLocationUseCase;
+import com.driver.port.in.UpdateDriverStatusUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,12 +22,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class DriverController {
 
 	private final UpdateDriverLocationUseCase updateDriverLocationUseCase;
+	private final UpdateDriverStatusUseCase updateDriverStatusUseCase;
 
 	@PostMapping("/{driverId}/location")
 	public ResponseEntity<Void> updateLocation(@PathVariable String driverId,
 			@Valid @RequestBody UpdateDriverLocationRequest request) {
 		this.updateDriverLocationUseCase.execute(new UpdateDriverLocationCommand(driverId,
 				new Location(request.lat(), request.lng()), System.currentTimeMillis()));
+		return ResponseEntity.ok().build();
+	}
+
+	@PatchMapping("/{driverId}/status")
+	public ResponseEntity<Void> updateStatus(@PathVariable String driverId,
+			@Valid @RequestBody UpdateDriverStatusRequest request) {
+		this.updateDriverStatusUseCase.execute(new UpdateDriverStatusCommand(
+				driverId, request.status(), System.currentTimeMillis()));
 		return ResponseEntity.ok().build();
 	}
 
