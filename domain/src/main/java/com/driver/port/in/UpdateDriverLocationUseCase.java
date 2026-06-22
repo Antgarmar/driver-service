@@ -1,4 +1,4 @@
-package com.driver.port;
+package com.driver.port.in;
 
 import com.driver.model.UpdateDriverLocationCommand;
 

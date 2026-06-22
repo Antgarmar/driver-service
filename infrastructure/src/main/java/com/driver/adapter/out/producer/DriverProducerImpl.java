@@ -1,6 +1,6 @@
 package com.driver.adapter.out.producer;
 
-import com.driver.DriverProducer;
+import com.driver.port.out.DriverProducer;
 import com.driver.model.DriverLocationEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;

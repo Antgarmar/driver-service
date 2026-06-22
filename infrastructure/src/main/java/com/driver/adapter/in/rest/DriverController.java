@@ -2,7 +2,7 @@ package com.driver.adapter.in.rest;
 
 import com.driver.model.Location;
 import com.driver.model.UpdateDriverLocationCommand;
-import com.driver.port.UpdateDriverLocationUseCase;
+import com.driver.port.in.UpdateDriverLocationUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

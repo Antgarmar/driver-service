@@ -1,4 +1,4 @@
-package com.driver;
+package com.driver.port.out;
 
 import com.driver.model.DriverLocationEvent;
 

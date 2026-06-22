@@ -1,9 +1,9 @@
 package com.driver.service;
 
-import com.driver.DriverProducer;
+import com.driver.port.out.DriverProducer;
 import com.driver.model.DriverLocationEvent;
 import com.driver.model.UpdateDriverLocationCommand;
-import com.driver.port.UpdateDriverLocationUseCase;
+import com.driver.port.in.UpdateDriverLocationUseCase;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
