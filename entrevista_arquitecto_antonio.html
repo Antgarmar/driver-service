@@ -408,6 +408,37 @@
   repositorio, con distintos valores/permisos por entorno.</div>
 </div>
 
+<h3>4.7 Bases de datos y almacenamiento</h3>
+
+<div class="qa">
+  <div class="q">¿Cómo diseñarías el modelo de datos de driver-service para soportar
+  actualizaciones de ubicación muy frecuentes sin degradar el rendimiento?</div>
+  <div class="a">Separaría el dato de "ubicación en tiempo real" (alta frecuencia de escritura,
+  se puede perder ocasionalmente) del dato "perfil del conductor" (baja frecuencia, debe ser
+  consistente). La ubicación en tiempo real la guardaría en un almacén de baja latencia como Redis
+  en lugar de la base de datos relacional principal, para no saturarla con escrituras constantes.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cuándo elegirías una base de datos SQL frente a una NoSQL para un
+  microservicio?</div>
+  <div class="a">SQL cuando el dominio tiene relaciones complejas, necesita transacciones ACID
+  fuertes y un esquema bien definido (por ejemplo, el perfil y estado del conductor). NoSQL
+  (documental, clave-valor o series temporales) cuando el volumen de escritura es muy alto, el
+  esquema es flexible o se necesita escalado horizontal nativo (por ejemplo, histórico de
+  ubicaciones o eventos de telemetría).</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo migrarías el esquema de la base de datos de driver-service sin causar
+  downtime?</div>
+  <div class="a">Con migraciones "expand-contract": primero se añade la nueva estructura sin
+  eliminar la antigua (expand), se despliega el código que escribe en ambas, se migran los datos
+  existentes, se cambia la lectura a la nueva estructura, y solo cuando todo está validado se
+  elimina la estructura antigua (contract). Esto evita romper compatibilidad durante despliegues
+  graduales.</div>
+</div>
+
 <h3>4.11 Preguntas de comportamiento y experiencia</h3>
 
 <div class="qa">
