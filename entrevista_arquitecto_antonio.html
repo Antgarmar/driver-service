@@ -227,7 +227,57 @@
   particionado geográfico si el volumen lo requiere.</div>
 </div>
 
-<h3>4.2 Preguntas de comportamiento y experiencia</h3>
+<h3>4.2 Escalabilidad y rendimiento</h3>
+
+<div class="qa">
+  <div class="q">¿Cómo escalarías driver-service si el número de conductores activos se
+  multiplicase por 100?</div>
+  <div class="a">Primero mediría dónde está el cuello de botella (CPU, memoria, I/O de base de
+  datos, red) con pruebas de carga. Después escalaría horizontalmente las instancias sin estado
+  detrás de un balanceador, añadiría caché para las consultas de disponibilidad más frecuentes,
+  optimizaría índices y consideraría particionar los datos por región geográfica si la consulta
+  principal es "conductores disponibles cerca de X".</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué diferencia hay entre escalado horizontal y vertical? ¿Cuándo usarías cada
+  uno?</div>
+  <div class="a">El escalado vertical añade más recursos (CPU/RAM) a una misma instancia; es
+  simple pero tiene un límite físico y un único punto de fallo. El horizontal añade más instancias
+  y reparte la carga; requiere que el servicio sea sin estado (o externalizar el estado) pero
+  escala prácticamente sin límite y mejora la disponibilidad. En microservicios casi siempre se
+  prioriza el escalado horizontal.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo diseñarías el sistema de asignación de conductores para que sea eficiente
+  a nivel geográfico (buscar el conductor más cercano)?</div>
+  <div class="a">Usaría estructuras de datos e índices geoespaciales (geohash, quad-tree, o
+  índices nativos como PostGIS/Redis GEO) en lugar de calcular distancias contra toda la tabla.
+  Esto permite consultas de "conductores en un radio de X km" en tiempo casi constante en lugar de
+  lineal con el número total de conductores.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué es el "hot partition" o punto caliente en un sistema distribuido y cómo lo
+  evitarías?</div>
+  <div class="a">Ocurre cuando una partición o clave concentra desproporcionadamente el tráfico
+  (por ejemplo, todos los conductores de una ciudad muy grande). Se mitiga con un particionado más
+  granular (por zonas más pequeñas), añadiendo un sufijo aleatorio a la clave (salting) o
+  replicando/cacheando esa partición concreta.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo medirías y mejorarías la latencia percibida por el usuario final al
+  solicitar un conductor?</div>
+  <div class="a">Instrumentaría el sistema con trazas distribuidas (OpenTelemetry) para ver el
+  tiempo consumido en cada salto (API gateway, driver-service, matching, base de datos). Con esos
+  datos priorizaría optimizar el camino crítico: cachear datos que no cambian con frecuencia,
+  paralelizar llamadas independientes, y mover trabajo no esencial (notificaciones, analítica)
+  fuera del camino síncrono mediante eventos.</div>
+</div>
+
+<h3>4.11 Preguntas de comportamiento y experiencia</h3>
 
 <div class="qa">
   <div class="q">Cuéntame sobre un momento en el que tuviste que tomar una decisión de
