@@ -353,6 +353,33 @@
   un beneficio claro.</div>
 </div>
 
+<h3>4.5 Testing y calidad</h3>
+
+<div class="qa">
+  <div class="q">¿Qué estrategia de testing aplicarías en un ecosistema de microservicios?</div>
+  <div class="a">La pirámide de testing: muchas pruebas unitarias rápidas para la lógica de
+  dominio, pruebas de integración para verificar la interacción con la base de datos o colas de
+  mensajes, contract testing (ej. Pact) para validar que los contratos entre driver-service y sus
+  consumidores no se rompen, y un número reducido de pruebas end-to-end para los flujos críticos.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué es el contract testing y por qué es especialmente útil en microservicios?</div>
+  <div class="a">Permite verificar que un consumidor y un proveedor de una API cumplen un contrato
+  acordado (esquema de petición/respuesta) sin necesidad de desplegar ambos servicios juntos. Evita
+  regresiones cuando un equipo cambia su API sin coordinarse con los consumidores, algo muy común
+  en sistemas con muchos servicios independientes.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo probarías la resiliencia de driver-service ante fallos de sus
+  dependencias?</div>
+  <div class="a">Con pruebas de caos controladas (chaos engineering): simular latencia alta,
+  caídas del servicio de base de datos o de la cola de mensajes, y verificar que los mecanismos de
+  circuit breaker, timeouts y fallback se comportan como se espera, sin degradar el resto del
+  sistema.</div>
+</div>
+
 <h3>4.11 Preguntas de comportamiento y experiencia</h3>
 
 <div class="qa">
