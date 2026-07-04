@@ -314,6 +314,45 @@
   prevenir abuso.</div>
 </div>
 
+<h3>4.4 Patrones de diseño y DDD</h3>
+
+<div class="qa">
+  <div class="q">¿Cómo aplicarías Domain-Driven Design (DDD) para definir los límites de
+  driver-service frente a otros servicios (trips, billing, notifications)?</div>
+  <div class="a">Identificando los "bounded contexts": driver-service es dueño del ciclo de vida y
+  estado del conductor; trips-service es dueño del ciclo de vida del viaje. La comunicación entre
+  contextos se hace mediante un "context mapping" explícito (eventos o APIs), evitando que un
+  servicio manipule directamente el modelo de datos de otro.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué es un agregado (aggregate) en DDD y cómo lo aplicarías al modelo de
+  conductor?</div>
+  <div class="a">Un agregado es un conjunto de entidades y value objects que se tratan como una
+  unidad de consistencia transaccional, con una raíz (aggregate root) que controla el acceso. En
+  driver-service, "Driver" sería la raíz del agregado, agrupando su perfil, estado de
+  disponibilidad y ubicación actual, garantizando que cualquier cambio mantenga las invariantes de
+  negocio (por ejemplo, no se puede asignar un viaje a un conductor no disponible).</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué patrones usarías para desacoplar la lógica de negocio de los detalles de
+  infraestructura (framework, base de datos)?</div>
+  <div class="a">Arquitectura hexagonal (puertos y adaptadores) o Clean Architecture: el dominio
+  define interfaces (puertos) y la infraestructura provee implementaciones (adaptadores). Esto
+  permite testear la lógica de negocio sin depender de una base de datos real y facilita cambiar
+  de tecnología sin tocar el núcleo del dominio.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cuándo usarías CQRS y cuándo sería excesivo aplicarlo?</div>
+  <div class="a">CQRS (separar modelos de lectura y escritura) tiene sentido cuando los patrones de
+  lectura y escritura son muy distintos (por ejemplo, muchas más lecturas de "conductores
+  disponibles" que escrituras de estado) o cuando se necesita escalar cada lado de forma
+  independiente. Es excesivo para dominios simples con CRUD básico, donde añadiría complejidad sin
+  un beneficio claro.</div>
+</div>
+
 <h3>4.11 Preguntas de comportamiento y experiencia</h3>
 
 <div class="qa">
