@@ -227,7 +227,48 @@
   particionado geográfico si el volumen lo requiere.</div>
 </div>
 
-<!-- SECTION:BEHAVIORAL_QA -->
+<h3>4.2 Preguntas de comportamiento y experiencia</h3>
+
+<div class="qa">
+  <div class="q">Cuéntame sobre un momento en el que tuviste que tomar una decisión de
+  arquitectura difícil.</div>
+  <div class="a">Estructura la respuesta con el método STAR: Situación (contexto del proyecto),
+  Tarea (el problema concreto a resolver), Acción (las alternativas evaluadas y por qué elegiste
+  una) y Resultado (impacto medible: rendimiento, mantenibilidad, reducción de incidencias).
+  Ejemplo: decidir entre acoplar dos servicios vía llamada síncrona o desacoplarlos con eventos,
+  explicando el trade-off de latencia frente a resiliencia.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo gestionas el desacuerdo técnico dentro de un equipo?</div>
+  <div class="a">Fomento la discusión basada en datos y no en opiniones: pruebas de concepto,
+  benchmarks o documentos de diseño (ADR - Architecture Decision Records) que comparen
+  alternativas. Busco el consenso, pero si no se alcanza, se toma una decisión con un responsable
+  claro, documentando el porqué para poder revisarla más adelante si las circunstancias cambian.</div>
+</div>
+
+<div class="qa">
+  <div class="q">Describe una vez que tuviste que aprender una tecnología nueva rápidamente.</div>
+  <div class="a">Explica tu proceso de aprendizaje (documentación oficial, prototipos pequeños,
+  pair programming) y cómo lo aplicaste de forma segura en el proyecto real, por ejemplo
+  introduciendo la tecnología primero en un componente de bajo riesgo antes de generalizarla.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo priorizas entre entregar rápido y mantener la calidad/arquitectura limpia?</div>
+  <div class="a">Reconozco la deuda técnica como una herramienta válida cuando se gestiona de forma
+  consciente: documento la decisión, su coste futuro y planifico cuándo abordarla. La calidad no es
+  negociable en aspectos críticos (seguridad, integridad de datos), pero sí puede haber margen en
+  aspectos no críticos a corto plazo.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo comunicas decisiones de arquitectura a perfiles no técnicos (negocio,
+  producto)?</div>
+  <div class="a">Traduzco el impacto técnico a términos de negocio: tiempo, coste, riesgo y
+  beneficio. Evito la jerga y uso analogías o diagramas simples, centrándome en qué gana el
+  negocio (fiabilidad, velocidad de entrega futura) en lugar de en el detalle de implementación.</div>
+</div>
 
 <!-- SECTION:QUESTIONS_TO_ASK -->
 
