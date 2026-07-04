@@ -174,9 +174,60 @@
       comprensibles para perfiles no técnicos.</li>
 </ul>
 
-<!-- SECTION:QA -->
+<h2>4. Preguntas y respuestas típicas de entrevista</h2>
 
-<!-- SECTION:QA -->
+<h3>4.1 Preguntas técnicas de arquitectura</h3>
+
+<div class="qa">
+  <div class="q">¿Por qué elegirías una arquitectura de microservicios frente a un monolito?</div>
+  <div class="a">Los microservicios permiten escalar y desplegar cada componente de forma
+  independiente, aíslan fallos por dominio y facilitan que equipos distintos trabajen en
+  paralelo. A cambio, aumentan la complejidad operativa (observabilidad, consistencia de datos,
+  comunicación entre servicios), por lo que solo se justifican cuando el tamaño del equipo y del
+  producto lo requiere. Un monolito bien modularizado puede ser preferible en etapas tempranas.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo garantizas la consistencia de datos entre microservicios como driver-service
+  y el servicio de viajes?</div>
+  <div class="a">Evito transacciones distribuidas síncronas (2PC) y opto por consistencia eventual
+  mediante el patrón Saga, coordinando el flujo con eventos de dominio (por ejemplo,
+  "DriverAssigned", "TripCancelled") y compensaciones si un paso falla. Esto prioriza la
+  disponibilidad del sistema sobre la consistencia inmediata.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo evitarías que un fallo en un servicio downstream tumbe todo el sistema?</div>
+  <div class="a">Aplicando patrones de resiliencia: timeouts agresivos, circuit breaker (ej.
+  Resilience4j), reintentos con backoff exponencial, bulkheads para aislar recursos y respuestas
+  degradadas (fallback) cuando sea posible, en lugar de propagar el fallo en cascada.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo diseñarías la comunicación entre driver-service y el resto de servicios?</div>
+  <div class="a">Para consultas puntuales de estado (¿está disponible este conductor?) usaría
+  comunicación síncrona vía REST o gRPC con contratos versionados. Para notificar cambios de
+  estado a múltiples consumidores (asignación, facturación, notificaciones push) usaría eventos
+  asíncronos a través de un bus de mensajes (Kafka/RabbitMQ), desacoplando productores y
+  consumidores en el tiempo.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo gestionarías el versionado de la API de driver-service?</div>
+  <div class="a">Versionado explícito (por ejemplo, en la URL o en cabeceras), manteniendo
+  compatibilidad hacia atrás siempre que sea posible, evolucionando los contratos de forma aditiva
+  y comunicando de forma clara las fechas de deprecación de versiones antiguas.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué estrategia seguirías para la base de datos de un servicio con alta carga de
+  lectura, como la consulta de conductores disponibles?</div>
+  <div class="a">Separar lecturas y escrituras (CQRS ligero), añadir una capa de caché (Redis)
+  para las consultas más frecuentes, indexar adecuadamente por ubicación/estado y considerar
+  particionado geográfico si el volumen lo requiere.</div>
+</div>
+
+<!-- SECTION:BEHAVIORAL_QA -->
 
 <!-- SECTION:QUESTIONS_TO_ASK -->
 
