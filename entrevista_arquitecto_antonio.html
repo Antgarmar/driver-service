@@ -439,6 +439,36 @@
   graduales.</div>
 </div>
 
+<h3>4.8 Mensajería y arquitectura orientada a eventos</h3>
+
+<div class="qa">
+  <div class="q">¿Qué garantías de entrega ofrece un sistema de mensajería como Kafka y cómo
+  afectan al diseño de driver-service?</div>
+  <div class="a">Normalmente "at-least-once": un mensaje puede procesarse más de una vez ante
+  fallos o reintentos. Por eso los consumidores de eventos de driver-service deben ser idempotentes
+  (por ejemplo, usando un identificador único de evento para no aplicar dos veces el mismo cambio
+  de estado).</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué es el patrón Outbox y por qué es relevante al publicar eventos desde
+  driver-service?</div>
+  <div class="a">Resuelve el problema de actualizar la base de datos y publicar un evento de forma
+  atómica: en lugar de escribir en la base de datos y luego publicar al bus de mensajes (dos
+  operaciones no atómicas que pueden desincronizarse), se escribe el evento en una tabla "outbox"
+  dentro de la misma transacción, y un proceso aparte (o CDC) lo publica de forma fiable al bus de
+  mensajes.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo evitarías el acoplamiento excesivo entre servicios al diseñar los eventos
+  de dominio?</div>
+  <div class="a">Diseñando eventos que expresen "hechos de negocio" (ej. "DriverBecameAvailable")
+  en lugar de replicar la estructura interna de la base de datos, versionando los esquemas de
+  eventos de forma compatible hacia atrás, y evitando que los consumidores dependan de detalles de
+  implementación internos del servicio emisor.</div>
+</div>
+
 <h3>4.11 Preguntas de comportamiento y experiencia</h3>
 
 <div class="qa">
