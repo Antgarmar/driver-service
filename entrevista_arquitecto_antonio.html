@@ -314,6 +314,69 @@
   prevenir abuso.</div>
 </div>
 
+<div class="qa">
+  <div class="q">¿Cómo implementarías autenticación y autorización en driver-service usando
+  OAuth2/JWT?</div>
+  <div class="a">Delegaría la emisión de tokens a un Authorization Server (Keycloak, Auth0 o el
+  propio API Gateway) siguiendo el flujo OAuth2 más adecuado (Authorization Code con PKCE para
+  clientes móviles, Client Credentials para comunicación entre servicios). driver-service actuaría
+  como resource server, validando el JWT (firma, expiración, audience) con Spring Security
+  Resource Server, y aplicaría autorización de grano fino con roles/scopes o políticas basadas en
+  atributos (ABAC) cuando el control por rol no sea suficiente (por ejemplo, un conductor solo
+  puede ver y modificar su propio perfil).</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo evitarías ataques de inyección (SQL/NoSQL injection) en driver-service?</div>
+  <div class="a">Usando siempre consultas parametrizadas o un ORM/Query DSL (JPA, jOOQ) en lugar de
+  concatenar strings SQL, validando y saneando toda entrada del usuario con un esquema explícito
+  (Bean Validation), aplicando el principio de mínimo privilegio en el usuario de base de datos, y
+  ejecutando análisis estático (SAST) y escaneo de dependencias (SCA) en el pipeline de CI/CD para
+  detectar patrones vulnerables antes de desplegar.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo gestionarías el rate limiting y la protección contra ataques de denegación
+  de servicio (DoS) en la API de conductores?</div>
+  <div class="a">Aplicaría rate limiting en varias capas: en el API Gateway (por IP, por API key o
+  por usuario autenticado) usando algoritmos como token bucket o sliding window, y a nivel de
+  aplicación con librerías como Resilience4j o Bucket4j para proteger endpoints críticos (por
+  ejemplo, la actualización de ubicación en tiempo real). Complementaría con un WAF y con
+  autoscaling para absorber picos legítimos de tráfico sin penalizar a usuarios normales.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo gestionarías los secretos (contraseñas de base de datos, API keys) de
+  driver-service de forma segura?</div>
+  <div class="a">Nunca en el código fuente ni en variables de entorno planas en el repositorio.
+  Usaría un gestor de secretos dedicado (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault)
+  con inyección en tiempo de ejecución, rotación automática periódica, acceso auditado y cifrado
+  en reposo, y escaneo de secretos (secret scanning) en el pipeline de CI para detectar fugas
+  accidentales antes de hacer merge.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué diferencia hay entre autenticación y autorización, y cómo se refleja en el
+  diseño de driver-service?</div>
+  <div class="a">Autenticación responde a "¿quién eres?" (verificar identidad, por ejemplo con
+  usuario/contraseña o un token JWT válido); autorización responde a "¿qué puedes hacer?" (permisos
+  sobre un recurso concreto). En driver-service la autenticación se resuelve una vez en el borde del
+  sistema (gateway) y se propaga como identidad verificada (JWT), mientras que la autorización se
+  aplica en cada operación de negocio (por ejemplo, solo un administrador puede desactivar la
+  cuenta de un conductor, mientras que el propio conductor solo puede actualizar sus datos).</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo diseñarías la seguridad para el envío de datos de geolocalización en
+  tiempo real de los conductores?</div>
+  <div class="a">Cifraría el canal completo con TLS (o wss:// si es WebSocket), autenticaría cada
+  conexión con un token de corta duración renovado periódicamente, validaría que el conductor solo
+  pueda enviar su propia ubicación (autorización a nivel de mensaje, no solo de conexión), y
+  aplicaría límites de frecuencia de envío para evitar que un cliente comprometido inunde el
+  sistema. Además, minimizaría la retención histórica de ubicaciones exactas por motivos de
+  privacidad (GDPR), agregando o anonimizando los datos una vez cumplen su propósito operativo.</div>
+</div>
+
 <h3>4.4 Patrones de diseño y DDD</h3>
 
 <div class="qa">
@@ -469,6 +532,80 @@
   implementación internos del servicio emisor.</div>
 </div>
 
+<div class="qa">
+  <div class="q">¿Cómo diseñarías el particionado de un topic de Kafka para eventos de
+  driver-service (por ejemplo, "driver-location-updates")?</div>
+  <div class="a">Usaría el ID del conductor como clave de partición (partition key), garantizando
+  que todos los eventos de un mismo conductor se procesen en orden dentro de la misma partición.
+  El número de particiones se dimensiona según el throughput objetivo y el paralelismo deseado en
+  el consumo (cada partición solo puede ser leída por un consumidor de un mismo grupo a la vez), y
+  se revisa que la clave elegida no genere "hot partitions" si hay conductores con actividad
+  desproporcionada.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué diferencia hay entre las garantías "at-most-once", "at-least-once" y
+  "exactly-once" en Kafka, y cuál usarías para eventos de ubicación de conductores?</div>
+  <div class="a">"At-most-once" puede perder mensajes pero nunca duplica; "at-least-once" nunca
+  pierde mensajes pero puede duplicarlos ante reintentos; "exactly-once" garantiza procesamiento
+  único (con coste de rendimiento y complejidad, usando transacciones de Kafka o el patrón
+  idempotent producer + consumidor idempotente). Para actualizaciones de ubicación en tiempo real,
+  donde perder un evento puntual es tolerable porque llegará el siguiente enseguida, optaría por
+  "at-least-once" con consumidores idempotentes en lugar de pagar el coste de "exactly-once".</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo gestionarías el orden de los mensajes en Kafka cuando necesitas escalar el
+  consumo con varios consumidores en paralelo?</div>
+  <div class="a">Kafka solo garantiza orden dentro de una misma partición, no entre particiones.
+  Si el orden por conductor es crítico, uso el ID del conductor como clave para que sus eventos
+  siempre caigan en la misma partición, y escalo el paralelismo aumentando el número de particiones
+  y de consumidores dentro del grupo (uno por partición como máximo), aceptando que el orden global
+  entre distintos conductores no está garantizado ni es necesario para el caso de uso.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué es un "consumer group" en Kafka y cómo afecta al diseño de
+  driver-service?</div>
+  <div class="a">Un consumer group es un conjunto de consumidores que se reparten las particiones
+  de un topic para procesar mensajes en paralelo sin duplicar trabajo entre ellos; cada mensaje de
+  una partición lo procesa solo un consumidor del grupo. En driver-service escalaría horizontalmente
+  las instancias que procesan eventos de asignación de viajes añadiéndolas al mismo consumer group,
+  y usaría grupos distintos cuando varios servicios (billing, notifications) necesiten consumir de
+  forma independiente el mismo topic.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo manejarías un mensaje "envenenado" (poison message) que hace fallar
+  repetidamente a un consumidor de Kafka?</div>
+  <div class="a">Configuraría un número máximo de reintentos con backoff y, si se agotan, enviaría
+  el mensaje a una dead-letter queue (DLQ o topic de errores) en lugar de bloquear indefinidamente
+  el procesamiento de la partición (lo cual pararía también los mensajes correctos posteriores).
+  Desde la DLQ se puede alertar, inspeccionar manualmente y reprocesar una vez corregida la causa,
+  sin perder el mensaje original ni degradar el resto del sistema.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cuándo usarías Kafka Streams o una tecnología de stream processing frente a
+  consumidores tradicionales de Kafka?</div>
+  <div class="a">Un consumidor tradicional procesa mensajes de forma independiente; Kafka Streams
+  (o Flink) aporta procesamiento con estado, ventanas temporales, agregaciones y joins entre
+  streams. Lo usaría, por ejemplo, para calcular en tiempo real métricas como "número de
+  conductores disponibles por zona en los últimos 5 minutos" a partir del stream de eventos de
+  ubicación, algo que sería complejo y propenso a errores de implementar manualmente con
+  consumidores simples gestionando el estado a mano.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo evolucionarías el esquema de un evento de Kafka sin romper a los
+  consumidores existentes?</div>
+  <div class="a">Usaría un registro de esquemas (Schema Registry) con Avro o Protobuf, aplicando
+  compatibilidad "backward" (los consumidores antiguos pueden leer eventos nuevos) como mínimo:
+  añadiendo campos opcionales con valores por defecto en lugar de eliminar o renombrar campos
+  existentes, y versionando de forma explícita cuando un cambio incompatible sea inevitable,
+  permitiendo que ambas versiones convivan durante una migración gradual.</div>
+</div>
+
 <h3>4.9 Observabilidad y monitorización</h3>
 
 <div class="qa">
@@ -592,6 +729,243 @@
   es imprescindible y qué se puede posponer, comunico riesgos de forma temprana y transparente, y
   reservo tiempo para pruebas de los flujos críticos aunque se reduzca el de funcionalidades
   secundarias.</div>
+</div>
+
+<h3>4.12 Kafka y streaming de eventos en profundidad</h3>
+
+<div class="qa">
+  <div class="q">¿Por qué elegirías Kafka frente a un broker tradicional como RabbitMQ para el
+  flujo de eventos de driver-service?</div>
+  <div class="a">Kafka está optimizado para alto throughput y retención duradera del log de
+  eventos (permite "replay" a nuevos consumidores o para recuperación), con particionado nativo
+  para escalar el consumo en paralelo. RabbitMQ brilla en enrutamiento flexible de mensajes
+  (exchanges, colas por prioridad) y en casos de baja latencia con colas más pequeñas. Para
+  eventos de dominio de alto volumen (ubicaciones, estados de conductor) que varios servicios
+  necesitan consumir de forma independiente y potencialmente reprocesar, Kafka encaja mejor.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo diseñarías el procesamiento de streams para calcular en tiempo real la
+  demanda y oferta de conductores por zona geográfica?</div>
+  <div class="a">Usaría Kafka Streams (o Flink) con ventanas temporales deslizantes (sliding
+  windows) agregando el stream de eventos de ubicación y estado por geohash o celda de rejilla,
+  manteniendo el estado agregado en un state store local respaldado por un "changelog topic" para
+  tolerancia a fallos. El resultado (oferta/demanda por zona) se publicaría en un topic compactado
+  o se expondría vía una API de consulta (KTable) para que otros servicios lo consuman sin
+  recalcularlo.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué es el "consumer lag" en Kafka y cómo lo monitorizarías y actuarías sobre
+  él?</div>
+  <div class="a">Es la diferencia entre el offset más reciente publicado en una partición y el
+  offset que el consumidor ha procesado; indica si el consumidor va "atrasado" respecto a la
+  producción de eventos. Lo monitorizaría con métricas expuestas por el propio broker o el cliente
+  (JMX/Micrometer) y alertaría si supera un umbral, ya que puede indicar que el consumidor es
+  demasiado lento (hay que escalar horizontalmente añadiendo particiones y consumidores) o que hay
+  un problema de rendimiento en el procesamiento.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo asegurarías que un evento de dominio se publica de forma fiable incluso si
+  Kafka no está disponible momentáneamente?</div>
+  <div class="a">Con el patrón Outbox: el evento se escribe en la misma transacción de base de
+  datos que el cambio de estado, y un proceso de publicación (poller o Debezium con Change Data
+  Capture) lee la tabla outbox y reintenta publicarlo a Kafka hasta conseguirlo, marcándolo como
+  enviado. Esto evita el escenario en el que la base de datos se actualiza pero el evento se
+  pierde porque Kafka estaba caído en ese instante.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo probarías (testing) la lógica de un consumidor de Kafka sin depender de un
+  clúster real?</div>
+  <div class="a">Para pruebas unitarias, aislaría la lógica de negocio del framework de mensajería
+  (puertos y adaptadores) y la testearía con mocks simples. Para pruebas de integración usaría
+  Testcontainers levantando un broker Kafka real en un contenedor Docker efímero, verificando la
+  serialización/deserialización, el particionado y el comportamiento ante fallos (reintentos,
+  DLQ) en condiciones muy cercanas a producción.</div>
+</div>
+
+<h3>4.13 Programación reactiva y WebClient</h3>
+
+<div class="qa">
+  <div class="q">¿Qué diferencia hay entre programación reactiva (Reactor/WebFlux) y el modelo
+  tradicional bloqueante de Spring MVC, y cuándo elegirías cada uno?</div>
+  <div class="a">Spring MVC usa un hilo por petición que se bloquea mientras espera I/O (base de
+  datos, llamadas a otros servicios); WebFlux usa un modelo no bloqueante basado en Reactor (Mono/
+  Flux) sobre un pool reducido de hilos que nunca se bloquean, escalando mejor bajo alta
+  concurrencia con I/O intensivo (muchas conexiones simultáneas, streaming de datos). Elegiría
+  WebFlux para el flujo de ubicaciones en tiempo real de miles de conductores concurrentes, y
+  Spring MVC (más simple de razonar y depurar) para CRUDs de negocio con carga moderada.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo usarías WebClient para llamar a otros microservicios (por ejemplo, el
+  servicio de viajes) de forma no bloqueante?</div>
+  <div class="a">Configuraría un WebClient con un connection pool dimensionado, timeouts explícitos
+  de conexión y respuesta, y lo combinaría con operadores de Reactor como <span class="tag">timeout
+  </span><span class="tag">retryWhen</span> con backoff exponencial y <span class="tag">
+  onErrorResume</span> para fallback, evitando bloquear el hilo con <span class="tag">.block()
+  </span> salvo en el borde de una capa síncrona (por ejemplo, un controlador MVC que necesita el
+  resultado antes de responder), donde su uso está justificado y controlado.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué problema resuelve el "backpressure" en programación reactiva y cómo se
+  aplicaría en el stream de ubicaciones de conductores?</div>
+  <div class="a">El backpressure evita que un productor rápido sature a un consumidor más lento,
+  permitiendo que el propio consumidor indique cuánta información puede procesar (en lugar de que
+  el productor empuje datos sin control, agotando memoria). En el stream de ubicaciones, si el
+  servicio de matching no puede procesar todos los eventos al ritmo en que llegan, aplicaría
+  estrategias como buffer con límite, "drop" de eventos antiguos (solo importa la última posición)
+  o muestreo (sample) para mantener solo la posición más reciente relevante en lugar de encolar
+  indefinidamente.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué errores comunes se cometen al migrar código bloqueante a WebFlux y cómo los
+  evitarías?</div>
+  <div class="a">El error más habitual es mezclar código bloqueante (JDBC clásico, llamadas
+  bloqueantes a otros sistemas) dentro del pipeline reactivo sin aislarlo, lo que bloquea los pocos
+  hilos del event loop y anula la ventaja de WebFlux. Lo evitaría usando drivers reactivos nativos
+  (R2DBC en vez de JPA/JDBC) o, si no es posible, delegando las llamadas bloqueantes a un
+  "bounded elastic scheduler" dedicado para no afectar al resto del sistema.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo depurarías y testearías código reactivo, dado que las trazas de pila (stack
+  traces) suelen ser difíciles de interpretar?</div>
+  <div class="a">Activaría "Reactor Debug Agent" o <span class="tag">Hooks.onOperatorDebug()</span>
+  en entornos de desarrollo/test para obtener trazas enriquecidas con el punto real de ensamblado
+  del pipeline, usaría <span class="tag">StepVerifier</span> de reactor-test para verificar de
+  forma determinista las señales emitidas (onNext, onError, onComplete) en pruebas unitarias, y me
+  apoyaría en trazas distribuidas (contexto de Reactor propagado a través de operadores) para
+  seguir una petición reactiva de extremo a extremo en producción.</div>
+</div>
+
+<h3>4.14 Concurrencia: hilos y Virtual Threads</h3>
+
+<div class="qa">
+  <div class="q">¿Qué son los Virtual Threads de Project Loom (Java 21) y qué problema
+  resuelven frente a los hilos de plataforma tradicionales?</div>
+  <div class="a">Son hilos ligeros gestionados por la JVM (no directamente por el sistema
+  operativo) que se multiplexan sobre un pequeño número de hilos de plataforma (carrier threads).
+  Permiten crear millones de hilos con un coste de memoria y creación mucho menor que los hilos
+  tradicionales, y cuando un virtual thread se bloquea en I/O, la JVM libera automáticamente el
+  carrier thread para que ejecute otro virtual thread, en lugar de dejarlo ocioso. Esto permite
+  escribir código bloqueante "de toda la vida" (más simple de leer y depurar que el reactivo) y
+  obtener una escalabilidad similar a la de un modelo no bloqueante.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cuándo elegirías Virtual Threads frente a programación reactiva (WebFlux) para
+  driver-service?</div>
+  <div class="a">Virtual Threads son atractivos cuando el cuello de botella es el número de
+  conexiones concurrentes esperando I/O (muchas llamadas a base de datos o a otros servicios) y se
+  quiere mantener la simplicidad del modelo de programación imperativo/bloqueante, evitando la
+  curva de aprendizaje y la complejidad de depuración de Reactor. Optaría por WebFlux cuando ya se
+  necesitan operadores reactivos avanzados (backpressure, combinación de streams, procesamiento de
+  eventos continuos) o cuando el ecosistema ya está construido sobre drivers reactivos (R2DBC).
+  Para muchos servicios CRUD con alta concurrencia de E/S, Virtual Threads ofrecen casi el mismo
+  beneficio de escalabilidad con mucho menos código.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué limitaciones o "pinning" tienen los Virtual Threads que un arquitecto debe
+  conocer antes de adoptarlos en producción?</div>
+  <div class="a">Un virtual thread puede quedar "clavado" (pinned) a su carrier thread —sin poder
+  liberarlo durante un bloqueo— cuando ejecuta código dentro de un bloque <span class="tag">
+  synchronized</span> o dentro de métodos nativos que bloquean, lo que puede degradar la
+  escalabilidad si se abusa de bloques sincronizados con I/O dentro. La recomendación es sustituir
+  <span class="tag">synchronized</span> por <span class="tag">ReentrantLock</span> en secciones
+  críticas de alta concurrencia, y validar con las herramientas de diagnóstico de la JVM (JFR)
+  cuánto "pinning" ocurre realmente antes de migrar código sensible a Virtual Threads.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué diferencia hay entre concurrencia y paralelismo, y cómo se aplica al
+  procesamiento de eventos de driver-service?</div>
+  <div class="a">Concurrencia es la capacidad de gestionar múltiples tareas que progresan de forma
+  intercalada en el tiempo (no necesariamente al mismo instante); paralelismo es ejecutar varias
+  tareas literalmente al mismo tiempo en distintos núcleos de CPU. El procesamiento de eventos de
+  Kafka es concurrente por naturaleza (muchos consumidores gestionando muchas particiones), y se
+  vuelve paralelo cuando se ejecutan en distintos hilos/núcleos simultáneamente; un cálculo intensivo
+  en CPU (por ejemplo, recalcular rutas óptimas) se beneficia de paralelismo real, mientras que
+  esperar respuestas de red se beneficia principalmente de concurrencia (no bloquear hilos
+  esperando).</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo evitarías condiciones de carrera (race conditions) al actualizar de forma
+  concurrente el estado de disponibilidad de un conductor?</div>
+  <div class="a">A nivel de base de datos, usaría bloqueo optimista (una columna de versión que
+  falla la actualización si el registro cambió desde que se leyó) en lugar de bloqueo pesimista
+  para no penalizar el rendimiento en el caso común sin conflicto. A nivel de aplicación, evitaría
+  compartir estado mutable entre hilos y, si fuera imprescindible, usaría estructuras
+  thread-safe (<span class="tag">AtomicReference</span>, colecciones concurrentes) o
+  serializaría las actualizaciones críticas de un mismo conductor a través de una única partición
+  de Kafka o una clave de bloqueo distribuido (Redis) para garantizar que solo una actualización
+  se procese a la vez por conductor.</div>
+</div>
+
+<h3>4.15 Sistemas en tiempo real y baja latencia</h3>
+
+<div class="qa">
+  <div class="q">¿Qué opciones de comunicación en tiempo real usarías para notificar a un
+  conductor que se le ha asignado un viaje, y cómo elegirías entre ellas?</div>
+  <div class="a">Para push bidireccional de baja latencia, WebSocket (o STOMP sobre WebSocket) si
+  el cliente mantiene una conexión persistente; para notificaciones a apps móviles en segundo
+  plano, un servicio de push nativo (FCM/APNs) es más eficiente energéticamente que mantener un
+  socket abierto constantemente. Para actualizaciones unidireccionales del servidor al cliente sin
+  necesidad de baja latencia extrema, Server-Sent Events (SSE) es más simple que WebSocket. La
+  elección depende de si la comunicación es bidireccional, de la frecuencia de los eventos y del
+  consumo de batería/recursos del cliente.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo escalarías horizontalmente un servicio de WebSockets que mantiene miles de
+  conexiones persistentes con conductores?</div>
+  <div class="a">Cada instancia mantiene un subconjunto de conexiones activas, por lo que necesito
+  un mecanismo para enrutar un mensaje al servidor correcto: un "sticky routing" en el balanceador
+  basado en el ID de conexión, y un backplane compartido (Redis Pub/Sub o un topic de Kafka) para
+  que cualquier instancia pueda publicar un evento que llegue a la instancia que realmente tiene
+  la conexión abierta con ese conductor concreto. También monitorizaría el número de conexiones
+  por instancia para dimensionar el autoscaling.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué trade-offs consideras entre latencia, throughput y consistencia al diseñar
+  el envío de la ubicación de un conductor cada pocos segundos?</div>
+  <div class="a">Enviar cada actualización individualmente minimiza la latencia pero aumenta el
+  número de mensajes (throughput) y la carga en el sistema; agrupar varias actualizaciones en lotes
+  (batching) reduce la sobrecarga por mensaje pero introduce latencia adicional. Para este caso de
+  uso, priorizaría baja latencia (el sistema necesita saber la posición reciente para el matching)
+  y aceptaría cierta pérdida de precisión histórica: solo me interesa la última posición conocida,
+  por lo que puedo aplicar compactación (quedarme solo con el último valor por clave) en el propio
+  topic de Kafka en lugar de conservar todo el histórico.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo garantizarías baja latencia extremo a extremo en el flujo "solicitud de
+  viaje → asignación de conductor"?</div>
+  <div class="a">Evitando saltos síncronos innecesarios en el camino crítico, cacheando datos que
+  no cambian con frecuencia (perfil del conductor) para no consultarlos en cada petición, usando
+  índices geoespaciales para encontrar candidatos cercanos en tiempo casi constante, procesando en
+  paralelo pasos independientes (verificar disponibilidad y calcular tarifa estimada), y midiendo
+  continuamente con trazas distribuidas para detectar regresiones de latencia antes de que
+  impacten a los usuarios.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué es un "circuit breaker" y cómo protegería un flujo de tiempo real ante la
+  caída de un servicio dependiente (por ejemplo, el cálculo de tarifas)?</div>
+  <div class="a">Un circuit breaker monitoriza la tasa de fallos de las llamadas a un servicio
+  dependiente y, al superar un umbral, "abre el circuito" dejando de intentar la llamada durante
+  un tiempo (fallando rápido en su lugar) para no acumular latencia ni agotar recursos esperando
+  timeouts repetidos; tras un periodo, permite pasar algunas peticiones de prueba ("half-open")
+  para comprobar si el servicio se ha recuperado. En el flujo de asignación, si el servicio de
+  tarifas falla, devolvería una estimación cacheada o un valor por defecto en lugar de bloquear
+  la asignación del conductor, priorizando la disponibilidad del flujo crítico.</div>
 </div>
 
 <h2>5. Preguntas para hacer al entrevistador</h2>
