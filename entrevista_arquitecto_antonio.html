@@ -469,6 +469,33 @@
   implementación internos del servicio emisor.</div>
 </div>
 
+<h3>4.9 Observabilidad y monitorización</h3>
+
+<div class="qa">
+  <div class="q">¿Qué métricas clave monitorizarías en driver-service en producción?</div>
+  <div class="a">Latencia y tasa de error de la API (p50/p95/p99), tasa de conductores disponibles
+  frente a la demanda, tiempo de procesamiento de eventos, saturación de la base de datos/caché, y
+  métricas de negocio como tiempo medio hasta encontrar un conductor disponible.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo depurarías un problema intermitente de latencia que solo aparece en
+  producción y afecta a varios servicios?</div>
+  <div class="a">Usando trazas distribuidas (OpenTelemetry/Jaeger) para seguir una petición a
+  través de todos los servicios implicados e identificar en qué salto concreto se produce la
+  latencia, correlacionando con métricas de infraestructura (CPU, memoria, I/O) y logs
+  estructurados con un identificador de correlación común.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué diferencia hay entre logs, métricas y trazas, y cómo se complementan?</div>
+  <div class="a">Los logs registran eventos discretos con contexto detallado; las métricas son
+  series numéricas agregadas en el tiempo (ideales para alertas y dashboards); las trazas muestran
+  el recorrido completo de una petición a través de múltiples servicios. Juntas forman los "tres
+  pilares de la observabilidad" y permiten pasar de "algo va mal" (métrica/alerta) a "por qué va
+  mal" (traza) a "qué pasó exactamente" (log).</div>
+</div>
+
 <h3>4.11 Preguntas de comportamiento y experiencia</h3>
 
 <div class="qa">
