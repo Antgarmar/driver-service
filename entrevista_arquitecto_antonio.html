@@ -496,6 +496,24 @@
   mal" (traza) a "qué pasó exactamente" (log).</div>
 </div>
 
+<h3>4.10 Cloud e infraestructura</h3>
+
+<div class="qa">
+  <div class="q">¿Cómo desplegarías driver-service en un entorno cloud con alta disponibilidad?</div>
+  <div class="a">Contenedores orquestados con Kubernetes, desplegados en al menos dos zonas de
+  disponibilidad, con auto-scaling horizontal basado en métricas de carga, health checks/liveness
+  y readiness probes, y una base de datos gestionada con réplicas para tolerancia a fallos.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué ventajas y riesgos tiene usar servicios gestionados (managed services) de un
+  proveedor cloud frente a autogestionar la infraestructura?</div>
+  <div class="a">Ventajas: menor carga operativa, alta disponibilidad y parcheo gestionados por el
+  proveedor, mayor velocidad de entrega. Riesgos: vendor lock-in, menor control sobre
+  configuraciones específicas y coste potencialmente mayor a gran escala. La decisión depende del
+  tamaño del equipo de plataforma y de cuánto valor aporta controlar ese detalle frente a delegarlo.</div>
+</div>
+
 <h3>4.11 Preguntas de comportamiento y experiencia</h3>
 
 <div class="qa">
