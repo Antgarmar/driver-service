@@ -102,9 +102,61 @@
 <h1>Preparación de Entrevista &mdash; Arquitecto de Software</h1>
 <p class="subtitle">Antonio García Márquez &middot; Proyecto de referencia: <strong>mini-uber / driver-service</strong></p>
 
-<!-- SECTION:PROFILE -->
+<h2>1. Perfil profesional</h2>
+<p>
+  Ingeniero de software con experiencia en el diseño y desarrollo de sistemas distribuidos
+  basados en microservicios. Enfoque en arquitecturas escalables, resilientes y mantenibles,
+  con especial atención a las buenas prácticas de diseño (SOLID, DDD, arquitectura hexagonal)
+  y a la calidad del código (pruebas automatizadas, integración continua).
+</p>
+<h3>Puntos clave a comunicar</h3>
+<ul>
+  <li>Capacidad para diseñar sistemas desacoplados y orientados a eventos.</li>
+  <li>Experiencia práctica llevando servicios desde el diseño hasta producción.</li>
+  <li>Visión de arquitecto: equilibrio entre simplicidad, escalabilidad y coste de mantenimiento.</li>
+  <li>Buenas prácticas de documentación y comunicación técnica con el equipo.</li>
+</ul>
 
-<!-- SECTION:ARCHITECTURE -->
+<h2>2. Arquitectura del proyecto de referencia: mini-uber</h2>
+<p>
+  <strong>mini-uber</strong> es un sistema tipo "ride-hailing" (similar a Uber) compuesto por
+  microservicios independientes que colaboran entre sí. <strong>driver-service</strong> es el
+  microservicio responsable de la gestión de los conductores (alta, disponibilidad, ubicación,
+  estado del vehículo, etc.) dentro de dicho ecosistema.
+</p>
+<h3>Responsabilidades de driver-service</h3>
+<ul>
+  <li>Registro y gestión del ciclo de vida de los conductores.</li>
+  <li>Actualización y consulta del estado/disponibilidad en tiempo real.</li>
+  <li>Exposición de una API para que otros servicios (por ejemplo, el servicio de viajes o de
+      asignación) puedan consultar y reservar conductores disponibles.</li>
+  <li>Publicación de eventos de dominio (ej. "conductor disponible", "conductor asignado") para
+      mantener desacoplados a los servicios consumidores.</li>
+</ul>
+<h3>Decisiones arquitectónicas a defender</h3>
+<table>
+  <tr><th>Aspecto</th><th>Decisión</th><th>Justificación</th></tr>
+  <tr>
+    <td>Estilo de arquitectura</td>
+    <td>Microservicios</td>
+    <td>Escalado independiente, despliegues autónomos y aislamiento de fallos por dominio.</td>
+  </tr>
+  <tr>
+    <td>Comunicación</td>
+    <td>Síncrona (REST/gRPC) para consultas, asíncrona (eventos) para notificaciones</td>
+    <td>Reduce el acoplamiento temporal entre servicios y mejora la resiliencia ante caídas puntuales.</td>
+  </tr>
+  <tr>
+    <td>Persistencia</td>
+    <td>Base de datos propia por servicio (database per service)</td>
+    <td>Evita acoplamiento a nivel de esquema y permite evolución independiente del modelo de datos.</td>
+  </tr>
+  <tr>
+    <td>Resiliencia</td>
+    <td>Circuit breaker / timeouts / reintentos en llamadas entre servicios</td>
+    <td>Evita el efecto cascada de fallos en un sistema distribuido.</td>
+  </tr>
+</table>
 
 <!-- SECTION:STRENGTHS -->
 
