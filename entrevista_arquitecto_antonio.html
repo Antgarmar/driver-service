@@ -277,6 +277,43 @@
   fuera del camino síncrono mediante eventos.</div>
 </div>
 
+<h3>4.3 Seguridad</h3>
+
+<div class="qa">
+  <div class="q">¿Cómo asegurarías la comunicación y autenticación entre microservicios?</div>
+  <div class="a">Usaría mTLS o un service mesh (Istio/Linkerd) para cifrar y autenticar el tráfico
+  interno, tokens JWT de corta duración para la identidad del servicio/usuario, y un API gateway
+  que centralice la autenticación de las peticiones externas antes de llegar a los servicios
+  internos.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo protegerías datos sensibles de los conductores (documentos, ubicación en
+  tiempo real, datos bancarios)?</div>
+  <div class="a">Cifrado en tránsito (TLS) y en reposo, minimización de datos (solo almacenar lo
+  estrictamente necesario), tokenización o enmascaramiento de datos sensibles en logs, control de
+  acceso basado en roles (RBAC) y auditoría de accesos. Para datos de pago, delegaría en un
+  proveedor certificado PCI-DSS en lugar de almacenar tarjetas directamente.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo evitarías que un servicio comprometido pueda acceder a todos los demás
+  servicios del sistema?</div>
+  <div class="a">Aplicando el principio de mínimo privilegio: cada servicio solo tiene permisos
+  sobre los recursos que necesita, segmentación de red (network policies), autenticación mutua
+  entre servicios y rotación periódica de credenciales/secretos gestionados con un vault
+  (HashiCorp Vault, AWS Secrets Manager).</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué es OWASP Top 10 y cómo lo tendrías en cuenta al diseñar una API?</div>
+  <div class="a">Es una lista de los riesgos de seguridad más críticos en aplicaciones web
+  (inyección, autenticación rota, exposición de datos sensibles, control de acceso roto, etc.). En
+  el diseño de la API validaría y sanearía todas las entradas, usaría autenticación/autorización
+  robustas, evitaría exponer información sensible en errores, y aplicaría rate limiting para
+  prevenir abuso.</div>
+</div>
+
 <h3>4.11 Preguntas de comportamiento y experiencia</h3>
 
 <div class="qa">
