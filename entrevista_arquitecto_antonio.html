@@ -380,6 +380,34 @@
   sistema.</div>
 </div>
 
+<h3>4.6 DevOps, CI/CD y despliegue</h3>
+
+<div class="qa">
+  <div class="q">¿Cómo diseñarías el pipeline de CI/CD para driver-service?</div>
+  <div class="a">Build y pruebas unitarias/integración en cada commit, análisis estático y de
+  seguridad (linters, SAST), construcción de una imagen inmutable (Docker), despliegue automático a
+  un entorno de staging, pruebas de contrato/smoke tests, y despliegue a producción mediante una
+  estrategia progresiva (canary o blue-green) con posibilidad de rollback automático si las métricas
+  empeoran.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Qué diferencia hay entre un despliegue blue-green y uno canary?</div>
+  <div class="a">Blue-green mantiene dos entornos idénticos (uno activo, uno en espera) y conmuta
+  todo el tráfico de golpe a la nueva versión, permitiendo rollback instantáneo. Canary despliega
+  la nueva versión a un pequeño porcentaje de tráfico real, se observan las métricas y se va
+  incrementando gradualmente, reduciendo el radio de impacto si algo falla.</div>
+</div>
+
+<div class="qa">
+  <div class="q">¿Cómo gestionarías la configuración y los secretos de driver-service en
+  distintos entornos (dev, staging, producción)?</div>
+  <div class="a">Externalizando la configuración del código (12-factor app), usando variables de
+  entorno o un servicio de configuración centralizado, y gestionando los secretos con una
+  herramienta dedicada (Vault, AWS Secrets Manager) en lugar de ficheros de configuración en el
+  repositorio, con distintos valores/permisos por entorno.</div>
+</div>
+
 <h3>4.11 Preguntas de comportamiento y experiencia</h3>
 
 <div class="qa">
